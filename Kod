@@ -1,0 +1,81 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Data.SqlClient;
+using System.Drawing;   
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Treeview_AllNode
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+        static string connection_string = @"Server = BAYRAM\WINCC; Database = Factory ; User ID = sa; Password = 123456";
+        private void agac_ac(string text)
+        {
+            treeView1.SelectedNode.Nodes.Clear();
+            using (SqlConnection conn = new SqlConnection(connection_string))
+            {
+                conn.Open();
+                string sorgu = @"SELECT * FROM t_UrunAgaci WHERE [Üst Dal]='" + text + "'";
+
+                using (SqlCommand cmnd = new SqlCommand(sorgu, conn))
+                {
+                    using (SqlDataReader read = cmnd.ExecuteReader())
+                    {
+                        if (read.HasRows)
+                        {
+                            while (read.Read())
+                            {
+                                treeView1.SelectedNode.Nodes.Add(read[1].ToString());
+                            }
+                            TreeNode[] treeNodes = new TreeNode[treeView1.SelectedNode.Nodes.Count];
+
+                            for (int i = 0; i < treeView1.SelectedNode.Nodes.Count; i++)
+                            {
+                                treeNodes[i] = treeView1.SelectedNode.Nodes[i];
+                            }
+                            for (int i = 0; i < treeNodes.Length; i++)
+                            {
+                                treeView1.SelectedNode = treeNodes[i];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            using (SqlConnection conn = new SqlConnection(connection_string))
+            {
+
+                conn.Open();
+                string sorgu = @"SELECT * FROM t_UrunAgaci WHERE [Üst Dal]='0'";
+                using (SqlCommand cmnd = new SqlCommand(sorgu, conn))
+                {
+                    using (SqlDataReader read = cmnd.ExecuteReader())
+                    {
+                        if (read.HasRows)
+                        {
+                            while (read.Read())
+                            {
+                                treeView1.Nodes.Add(read[1].ToString());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            agac_ac(treeView1.SelectedNode.Text);
+        }
+    }
+}
